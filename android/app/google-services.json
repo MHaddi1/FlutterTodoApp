@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "405132171539",
+    "project_id": "my-project-bbffa",
+    "storage_bucket": "my-project-bbffa.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:405132171539:android:65ffb7c3aa00c5a69222e6",
+        "android_client_info": {
+          "package_name": "com.example.marapay"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "405132171539-7b79km7ks7i5r1b6q4uu3clh1tc4pvok.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkqvDi95AE5quVvK6rinCL1-1UuxaZnAo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "405132171539-7b79km7ks7i5r1b6q4uu3clh1tc4pvok.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "405132171539-uko11dibrsqvgtvqnvlv9qj5e9d23t1r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.marapay"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
