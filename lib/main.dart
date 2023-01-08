@@ -1,28 +1,36 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:marapay/profile_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:marapay/sign_up.dart';
+import 'package:flutter/services.dart';
+import 'package:my_todo/todo.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import 'sign_up.dart';
+import 'splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  var email = prefs.getString("email");
+  print(email);
 
-  runApp(const MyApp());
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: email == null ? const MyHomePage() : Todo(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: MyHomePage(),
-    );
+    return const MaterialApp(debugShowCheckedModeBanner: false, home: Splash());
   }
 }
 
@@ -38,21 +46,32 @@ class _MyHomePageState extends State<MyHomePage> {
     FirebaseApp firebaseApp = await Firebase.initializeApp();
     return firebaseApp;
   }
+//  @override
+//   void initState() {
+//     super.initState();
+//     Timer(
+//         const Duration(seconds: 3),
+//         () => Navigator.pushReplacement(context,
+//             MaterialPageRoute(builder: (context) => const MyHomePage())));
+//   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: FutureBuilder(
-      future: _intialzationFirebase(),
-      builder: ((context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return const LoginScreen();
-        }
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      }),
-    ));
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+          body: FutureBuilder(
+        future: _intialzationFirebase(),
+        builder: ((context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return const LoginScreen();
+          }
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }),
+      )),
+    );
     // This trailing comma makes auto-formatting nicer for build methods.
   }
 }
@@ -68,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   TextEditingController email = TextEditingController();
   TextEditingController pass = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   static Future<User?> loginUsingWithEmailPassword(
       {required String email,
@@ -90,6 +110,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.portraitUp,
+    ]);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -109,93 +133,120 @@ class _LoginScreenState extends State<LoginScreen> {
           const SizedBox(
             height: 44,
           ),
-          TextField(
-            controller: email,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-                hintText: "Email",
-                prefixIcon: Icon(
-                  Icons.email,
-                  color: Colors.black,
-                )),
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          TextField(
-            controller: pass,
-            obscureText: true,
-            decoration: const InputDecoration(
-                hintText: "Password",
-                prefixIcon: Icon(
-                  Icons.lock,
-                  color: Colors.black,
-                )),
-          ),
-          TextButton(
-              onPressed: () {},
-              child: const Text(
-                "Forget Password ?",
-                style: TextStyle(color: Colors.red),
+          Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    controller: email,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                        labelText: "Email",
+                        prefixIcon: Icon(
+                          Icons.email,
+                          color: Colors.black,
+                        )),
+                    validator: (value) {
+                      if (email.text.isEmpty) {
+                        return "Email Field Is Empty";
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextFormField(
+                    controller: pass,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                        labelText: "Password",
+                        prefixIcon: Icon(
+                          Icons.lock,
+                          color: Colors.black,
+                        )),
+                    validator: (value) {
+                      if (pass.text.isEmpty) {
+                        return "Password Field is Empty";
+                      }
+                      return null;
+                    },
+                  ),
+                  TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        "Forget Password ?",
+                        style: TextStyle(color: Colors.red),
+                      )),
+                  Container(
+                    width: double.infinity,
+                    child: RawMaterialButton(
+                      elevation: 0.0,
+                      padding: const EdgeInsets.all(20),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      fillColor: Colors.red,
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          _formKey.currentState?.save();
+                          setState(() {
+                            isLoading = true;
+                          });
+                          Future.delayed(const Duration(seconds: 4), () {
+                            setState(() {
+                              isLoading = false;
+                            });
+                          });
+                          User? user = await loginUsingWithEmailPassword(
+                              email: email.text,
+                              password: pass.text,
+                              context: context);
+
+                          print(user);
+
+                          if (user != null) {
+                            SharedPreferences pref =
+                                await SharedPreferences.getInstance();
+                            pref.setString("email", email.text);
+                            Navigator.pushReplacement(context,
+                                MaterialPageRoute(builder: (_) {
+                              return const Todo();
+                            }));
+                          }
+                        }
+                      },
+                      child: isLoading
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+
+                              // as elevated button gets clicked we will see text"Loading..."
+                              // on the screen with circular progress indicator white in color.
+                              //as loading gets stopped "Submit" will be displayed
+                              children: const [
+                                Text(
+                                  'Loading...',
+                                  style: TextStyle(
+                                      fontSize: 20, color: Colors.white),
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              ],
+                            )
+                          : const Text(
+                              'Login',
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 17),
+                            ),
+                    ),
+                  ),
+                ],
               )),
           const SizedBox(
-            height: 25,
-          ),
-          Container(
-            width: double.infinity,
-            child: RawMaterialButton(
-              elevation: 0.0,
-              padding: const EdgeInsets.all(20),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              fillColor: Colors.red,
-              onPressed: () async {
-                   setState(() {
-                  isLoading = true;
-                });
-                Future.delayed(const Duration(seconds: 4), () {
-                  setState(() {
-                    isLoading = false;
-                  });
-                });
-                User? user = await loginUsingWithEmailPassword(
-                    email: email.text, password: pass.text, context: context);
-               
-                print(user);
-              
-                if (user != null) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProfileScreen(),
-                      ));
-                }
-              },
-              child: isLoading
-                  ? Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-
-                      // as elevated button gets clicked we will see text"Loading..."
-                      // on the screen with circular progress indicator white in color.
-                      //as loading gets stopped "Submit" will be displayed
-                      children: const [
-                        Text(
-                          'Loading...',
-                          style: TextStyle(fontSize: 20,color: Colors.white),
-                        ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        CircularProgressIndicator(
-                          color: Colors.white,
-                        ),
-                      ],
-                    )
-                  : const Text('Login',style: TextStyle(color: Colors.white,fontSize: 17),),
-            ),
-          ),
-          const SizedBox(
-            height: 20,
+            height: 45,
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -203,15 +254,13 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text(
                 "Do not have Account? ",
               ),
-              InkWell(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const Sign_Up()));
+
+              TextButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (_) => const Sign_Up()));
                   },
-                  child: const Text("Sign Up",
-                      style: TextStyle(color: Colors.red, fontSize: 17)))
+                  child: const Text("Sign Up",style: TextStyle(fontSize: 17,color: Colors.red),))
             ],
           ),
         ],
