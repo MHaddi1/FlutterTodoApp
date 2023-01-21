@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:my_todo/modal/my_modal.dart';
 import 'package:my_todo/todo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,10 +13,11 @@ class addnote extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
 
   final fb = FirebaseDatabase.instance;
+   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
-    final ref = fb.ref().child('todos');
+    final ref = fb.ref().child(firebaseAuth.currentUser!.uid);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -23,11 +25,11 @@ class addnote extends StatelessWidget {
         appBar: AppBar(
           title: const Text("Add Todos"),
           leading: Padding(
-            padding: EdgeInsets.only(left: 10),
+            padding: const EdgeInsets.only(left: 10),
             child: GestureDetector(
               onTap: () {
                 Navigator.pushReplacement(
-                    context, MaterialPageRoute(builder: (_)=>const Todo()));
+                    context, MaterialPageRoute(builder: (_) => const Todo()));
               },
               child: const Icon(Icons.arrow_back),
             ),
@@ -87,17 +89,13 @@ class addnote extends StatelessWidget {
                     // SharedPreferences pref =
                     //     await SharedPreferences.getInstance();
                     // pref.setString("email", title.text);
-                    {
-                      ref.push().set({
-                        "title": title.text,
-                        "subtitle": subtitle.text,
-                        "uid": uid
-                      }).asStream();
-                      //  ref.push().set(uid).asStream();
+                    UserData send = UserData(
+                        title: title.text, subtitle: subtitle.text, uid: uid);
+                    ref.push().set(send.toJson()).asStream();
+                    //  ref.push().set(uid).asStream();
 
-                      Navigator.pushReplacement(context,
-                          MaterialPageRoute(builder: (_) => const Todo()));
-                    }
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (_) => const Todo()));
                   }
                 },
                 child: const Text(

@@ -43,6 +43,7 @@ dependencies:
   shared_preferences: ^2.0.15
   email_validator: '^2.1.16'
   rename: ^2.0.1
+  http: ^0.13.5
 
 dev_dependencies:
   flutter_test:

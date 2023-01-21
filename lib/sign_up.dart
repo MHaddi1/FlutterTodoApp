@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:my_todo/modal/my_modal.dart';
 import 'main.dart';
 
 class Sign_Up extends StatefulWidget {
@@ -21,7 +26,7 @@ class _Sign_UpState extends State<Sign_Up> {
 
   final _formKey = GlobalKey<FormState>();
 
-  static Future<User?> signUpUsingWithEmailPassword(
+  Future<User?> signUpUsingWithEmailPassword(
       {required String email,
       required String password,
       required BuildContext context}) async {
@@ -29,22 +34,30 @@ class _Sign_UpState extends State<Sign_Up> {
     User? user;
 
     try {
-      UserCredential userCredential = await firebaseAuth
-          .createUserWithEmailAndPassword(email: email, password: password);
-      if (user != null) {
-        print(user.email);
-      }
-
-      user = userCredential.user;
-      print(user);
-
-      print("sign up....!!");
+      await firebaseAuth
+          .createUserWithEmailAndPassword(email: email, password: password)
+          .then((value) => verifyEmail());
     } on FirebaseAuthException catch (e) {
       if (e.code == "user-not-registered") {
-        print("This Email cannot be register");
+        const Text("This Email cannot be register");
+      } else if (e.code == "email-already-in-use") {
+        const Text("email already in use");
       }
+    } catch (e) {
+      print(e);
     }
     return user;
+  }
+
+  verifyEmail() async {
+    final user = FirebaseAuth.instance.currentUser!;
+    await user.sendEmailVerification();
+    if (!user.emailVerified) {
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const MyHomePage()));
+    } else {
+      const Text("Email is Still Not Verify");
+    }
   }
 
   @override
@@ -152,10 +165,12 @@ class _Sign_UpState extends State<Sign_Up> {
                                 email: email.text,
                                 password: password.text,
                                 context: context);
-                            Navigator.pushReplacement(context,
-                                MaterialPageRoute(builder: (_) {
-                              return const MyHomePage();
-                            }));
+                            final fb = FirebaseDatabase.instance;
+                            final ref = fb.ref().child(user!.uid);
+                            UserData send = UserData(
+                                title: "Title", subtitle: "Subtitle 😊");
+                            ref.push().set(send.toJson()).asStream();
+
                             const snackdemo = SnackBar(
                               content: Text('Sign Up Successfully...!!'),
                               backgroundColor: Colors.red,
@@ -186,7 +201,6 @@ class _Sign_UpState extends State<Sign_Up> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text("Have an Account? "),
-              
                 TextButton(
                     onPressed: () {
                       Navigator.pushReplacement(
@@ -194,7 +208,10 @@ class _Sign_UpState extends State<Sign_Up> {
                           MaterialPageRoute(
                               builder: (_) => const MyHomePage()));
                     },
-                    child: const Text("Sign In",style: TextStyle(fontSize: 17,color: Colors.red),))
+                    child: const Text(
+                      "Sign In",
+                      style: TextStyle(fontSize: 17, color: Colors.red),
+                    ))
               ],
             )
           ],

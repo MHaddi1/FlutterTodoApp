@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
+import 'package:my_todo/forget_password.dart';
 import 'package:my_todo/todo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
@@ -21,7 +22,7 @@ Future<void> main() async {
 
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
-    home: email == null ? const MyHomePage() : Todo(),
+    home: email == null ? const MyHomePage() : const Todo(),
   ));
 }
 
@@ -49,10 +50,8 @@ class _MyHomePageState extends State<MyHomePage> {
 //  @override
 //   void initState() {
 //     super.initState();
-//     Timer(
-//         const Duration(seconds: 3),
-//         () => Navigator.pushReplacement(context,
-//             MaterialPageRoute(builder: (context) => const MyHomePage())));
+//    Navigator.pushReplacement(context,
+//             MaterialPageRoute(builder: (const Splash) => const MyHomePage()));
 //   }
 
   @override
@@ -173,7 +172,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: ((context) =>
+                                    const ForgetPassword())));
+                      },
                       child: const Text(
                         "Forget Password ?",
                         style: TextStyle(color: Colors.red),
@@ -203,11 +208,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               context: context);
 
                           print(user);
-
+                          const Center(
+                            child: CircularProgressIndicator(),
+                          );
                           if (user != null) {
                             SharedPreferences pref =
                                 await SharedPreferences.getInstance();
                             pref.setString("email", email.text);
+                            // ignore: use_build_context_synchronously
                             Navigator.pushReplacement(context,
                                 MaterialPageRoute(builder: (_) {
                               return const Todo();
@@ -218,10 +226,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: isLoading
                           ? Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-
-                              // as elevated button gets clicked we will see text"Loading..."
-                              // on the screen with circular progress indicator white in color.
-                              //as loading gets stopped "Submit" will be displayed
                               children: const [
                                 Text(
                                   'Loading...',
@@ -254,13 +258,15 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text(
                 "Do not have Account? ",
               ),
-
               TextButton(
                   onPressed: () {
                     Navigator.pushReplacement(context,
                         MaterialPageRoute(builder: (_) => const Sign_Up()));
                   },
-                  child: const Text("Sign Up",style: TextStyle(fontSize: 17,color: Colors.red),))
+                  child: const Text(
+                    "Sign Up",
+                    style: TextStyle(fontSize: 17, color: Colors.red),
+                  ))
             ],
           ),
         ],
