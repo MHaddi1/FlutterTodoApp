@@ -54,14 +54,21 @@ class _Sign_UpState extends State<Sign_Up> {
   }
 
   verifyEmail() async {
+    Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: ((context) => const MyHomePage())));
+    showDialog(
+        context: context,
+        builder: ((context) => const AlertDialog(
+              title: Text("Sign Up Success"),
+            )));
+    ElevatedButton(
+      onPressed: () {
+        Navigator.of(context).canPop();
+      },
+      child: const Text("Ok"),
+    );
     final user = FirebaseAuth.instance.currentUser!;
     await user.sendEmailVerification();
-    if (!user.emailVerified) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const MyHomePage()));
-    } else {
-      const Text("Email is Still Not Verify");
-    }
   }
 
   @override

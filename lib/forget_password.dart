@@ -12,8 +12,6 @@ class ForgetPassword extends StatefulWidget {
 }
 
 class _ForgetPasswordState extends State<ForgetPassword> {
-
-
   TextEditingController password = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
@@ -63,7 +61,19 @@ class _ForgetPasswordState extends State<ForgetPassword> {
                             MaterialPageRoute(builder: ((_) {
                           return const MyHomePage();
                         })));
-                        password.text.isEmpty;
+                        showDialog(
+                            context: context,
+                            builder: ((context) => const AlertDialog(
+                                  title:
+                                      Text("Check your Inbox or spam Folder"),
+                                )));
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).canPop();
+                          },
+                          child: const Text("Ok"),
+                        );
+                        password.clear();
                       }
                     }),
                     icon: const Icon(Icons.email),
