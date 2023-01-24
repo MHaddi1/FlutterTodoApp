@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter/services.dart';
 import 'package:my_todo/modal/my_modal.dart';
 import 'main.dart';
 
@@ -40,8 +41,11 @@ class _Sign_UpState extends State<Sign_Up> {
     } on FirebaseAuthException catch (e) {
       if (e.code == "user-not-registered") {
         const Text("This Email cannot be register");
-      } else if (e.code == "email-already-in-use") {
-        const Text("email already in use");
+      }
+      if (e is PlatformException) {
+        if (e.code == "email-already-in-use") {
+          const Text("email already in use");
+        }
       }
     } catch (e) {
       print(e);

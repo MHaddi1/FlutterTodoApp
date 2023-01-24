@@ -18,9 +18,16 @@ class _TodoState extends State<Todo> {
   final fb = FirebaseDatabase.instance;
   FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
+  TextEditingController title = TextEditingController();
+  TextEditingController subtite = TextEditingController();
+
+  String? c = null;
+
   @override
   Widget build(BuildContext context) {
     final ref = fb.ref().child(firebaseAuth.currentUser!.uid);
+
+    final formKey = GlobalKey<FormState>();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -53,7 +60,7 @@ class _TodoState extends State<Todo> {
               onTap: () async {
                 showDialog(
                     context: context,
-                    builder: (context) => AlertDialog(
+                    builder: (ctx) => AlertDialog(
                           title: const Text("Are you want to Logout?"),
                           actions: [
                             TextButton(
@@ -80,7 +87,7 @@ class _TodoState extends State<Todo> {
                                 padding: const EdgeInsets.all(14),
                                 child: const Text("No"),
                               ),
-                            )
+                            ),
                           ],
                         ));
               },
@@ -107,7 +114,70 @@ class _TodoState extends State<Todo> {
             try {
               {
                 return GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    setState(() {
+                      c = snapshot.key;
+                      print(c);
+                    });
+                    showDialog(
+                        context: context,
+                        builder: ((context) => AlertDialog(
+                              actions: [
+                                Column(
+                                  children: [
+                                    Form(
+                                        key: formKey,
+                                        child: Column(
+                                          children: [
+                                            TextFormField(
+                                               validator: ((value) {
+                                                if (value!.isEmpty) {
+                                                  return "Not Empty Title";
+                                                }
+                                                return null;
+                                              }),
+                                              controller: title,
+                                              
+                                              decoration: const InputDecoration(
+                                                  labelText: "Title"),
+                                            ),
+                                            TextFormField(
+                                              validator: ((value) {
+                                                if (value!.isEmpty) {
+                                                  return "Not Empty Subtitle";
+                                                }
+                                                return null;
+                                              }),
+                                              controller: subtite,
+                                              
+                                              decoration: const InputDecoration(
+                                                  labelText: "Subtitle"),
+                                            ),
+                                          ],
+                                        )),
+                                  ],
+                                ),
+                                Center(
+                                  child: ElevatedButton(
+                                      onPressed: (() async {
+                                        if (formKey.currentState!.validate()) {
+                                          formKey.currentState!.save();
+                                          await upd();
+                                         
+                                        }
+                                      }),
+                                      child: const Text("Update")),
+                                ),
+                                Center(
+                                  child: ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: const Text("cancel")),
+                                ),
+                              ],
+                            )));
+                  },
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: ListTile(
@@ -182,5 +252,19 @@ class _TodoState extends State<Todo> {
         ),
       ),
     );
+  }
+
+  upd() async {
+    FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+    DatabaseReference ref1 = FirebaseDatabase.instance.ref(
+      firebaseAuth.currentUser!.uid,
+    );
+    UserData update = UserData(title: title.text, subtitle: subtite.text);
+
+    print(update.title);
+    await ref1.child(c!).update(update.toJson());
+     Navigator.of(context).pop();
+    title.clear();
+    subtite.clear();
   }
 }
